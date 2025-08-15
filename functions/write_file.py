@@ -26,8 +26,8 @@ def write_file(working_directory, file_path, content):
         abspath = os.path.abspath(path)
         if working_directory not in abspath:
             return f'Error: Cannot read "{file_path}" as it is outside the permitted working directory'
-        if not os.path.exists(file_path):
-            os.makedirs(file_path)
+        #if not os.path.exists(file_path):
+        #    os.makedirs(file_path)
         with open(path, "w") as f:
             f.write(content)
         return f'Successfully wrote to "{file_path}" ({len(content)} characters written)'
