@@ -41,8 +41,12 @@ def main():
         verbose_arg = True
 
     messages = [types.Content(role="user", parts=[types.Part(text=user_prompt)]),]
-    for i in range(0,12,1):
+    response = None
+    for i in range(0,20,1):
         try:
+            #print(f"DEBUG START, ROUND: {i}")
+            #print(messages)
+            #print(f"DEBUG END, ROUND: {i}")
             response = client.models.generate_content(
             model='gemini-2.0-flash-001',
             contents=messages,
@@ -50,21 +54,26 @@ def main():
             )
             for candidate in response.candidates:
                 messages.append(candidate.content)
-            for part in response.candidates[0].content.parts:
-                if hasattr(part, "function_call") and part.function_call:
-                    for call in response.function_calls:
-                        function_responses = call_function(call, verbose_arg)
-                        if not function_responses.parts[0].function_response.response:
-                            raise Exception("Error: No response from function call!")
-                        new_message = types.Content(
-                            role="user",
-                            parts=function_responses.parts)
-                        messages.append(new_message)
-            if response.candidates[0].content.parts.text != None and response.candidates[0].content.function_call == None:
-                print(response.text)
+            if response.function_calls:
+                for call in response.function_calls:
+                    function_responses = call_function(call, verbose_arg)
+                    if not function_responses.parts[0].function_response.response:
+                        raise Exception("Error: No response from function call!")
+                    new_message = types.Content(
+                        role="user",
+                        parts=function_responses.parts)
+                    messages.append(new_message)
+            if not response.function_calls:
                 break
         except Exception as e:
             print(f"Error: {e}")
+    #print("LOOP DONE: ")
+    #print(response.function_calls)
+    print(response.text)
+
+    #print("LOOP DONE, ENTIRE MESSAGES LIST: ")
+    #print(messages)
+    #print("FINAL RESULT: ")
     
     prompt_tokens = response.usage_metadata.prompt_token_count
     response_tokens = response.usage_metadata.candidates_token_count
